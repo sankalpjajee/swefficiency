@@ -273,16 +273,12 @@ def parse_log_sympy(log: str) -> dict[str, str]:
     """
     test_status_map = {}
     if "pytest" in log:
-        # Split into lines.
-        lines = log.splitlines()
-        sympy_lines = [line for line in lines if line.strip().startswith("sympy/")]
-        for line in sympy_lines:
-            try:
-                test_name, test_status, _ = line.split(None, 2)
-                test_status_map[test_name] = test_status
-            except ValueError:
-                continue
-        return test_status_map
+        # Use the robust pytest v2 parser for pytest-formatted sympy output.
+        # The previous approach only matched lines starting with "sympy/" which
+        # missed pytest output in "PASSED sympy/..." format (status first).
+        test_status_map = parse_log_pytest_v2(log)
+        if test_status_map:
+            return test_status_map
 
     pattern = r"(_*) (.*)\.py:(.*) (_*)"
     matches = re.findall(pattern, log)

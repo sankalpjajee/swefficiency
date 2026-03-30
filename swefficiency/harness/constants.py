@@ -78,7 +78,7 @@ TEST_PYTEST_VERBOSE = (
 )
 TEST_PYTEST_DISTRIBUTED = "pytest --no-header -rA --tb=no -p no:cacheprovider --continue-on-collection-errors -n 4"
 
-TEST_ASTROPY_PYTEST = "pytest -rA -vv -o console_output_style=classic --tb=no"
+TEST_ASTROPY_PYTEST = "pytest -rA -vv -o console_output_style=classic --tb=no --override-ini='addopts='"
 TEST_DJANGO = "./tests/runtests.py --verbosity 2 --settings=test_sqlite --parallel 1"
 TEST_DJANGO_NO_PARALLEL = "./tests/runtests.py --verbosity 2"
 TEST_SEABORN = "pytest --no-header -rA"
@@ -3939,6 +3939,36 @@ ISOLATION_CHECK_EXCEPTIONS = {
     "scipy__scipy-10393",
     "matplotlib__matplotlib-22875",
     "pandas-dev__pandas-52928",
+}
+
+# Flaky tests to exclude from PASS_TO_PASS correctness checks.
+# Maps instance_id → set of test names that are known to be non-deterministic
+# or environment-dependent and should not gate correctness.
+FLAKY_TEST_EXCEPTIONS: dict[str, set[str]] = {
+    # test_doctest_float_replacement depends on float repr formatting
+    "astropy__astropy-8428": {"astropy/utils/tests/test_misc.py::test_doctest_float_replacement"},
+    "astropy__astropy-8494": {"astropy/utils/tests/test_misc.py::test_doctest_float_replacement"},
+    "astropy__astropy-8502": {"astropy/utils/tests/test_misc.py::test_doctest_float_replacement"},
+    # Non-deterministic convergence tests
+    "scikit-learn__scikit-learn-17235": {"sklearn/cluster/tests/test_k_means.py::test_kmeans_convergence"},
+}
+
+# Instances where tests crash (segfault, OOM, import error) due to Docker
+# environment issues, not due to the gold patch.
+CRASH_EXCEPTION_INSTANCES = {
+    # Numpy crashes
+    "numpy__numpy-13697",   # Import error
+    "numpy__numpy-21832",   # Segfault
+    "numpy__numpy-24663",   # OOM/Killed
+    # Pandas segfaults
+    "pandas-dev__pandas-36325",
+    "pandas-dev__pandas-36872",
+    "pandas-dev__pandas-38148",
+    "pandas-dev__pandas-38353",
+    "pandas-dev__pandas-38560",
+    "pandas-dev__pandas-40818",
+    "pandas-dev__pandas-48472",
+    "pandas-dev__pandas-48609",
 }
 
 
