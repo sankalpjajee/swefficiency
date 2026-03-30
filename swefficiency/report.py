@@ -26,7 +26,6 @@ import datasets
 import pandas as pd
 from tqdm import tqdm
 
-from swefficiency.harness.constants import FLAKY_TEST_EXCEPTIONS
 from swefficiency.harness.log_parsers import MAP_REPO_TO_PARSER
 
 
@@ -131,17 +130,13 @@ def evaluate_instance(
             (pred_run / instance_id / "covering_test_status.json").read_text()
         )
 
-    # Exclude known flaky tests from correctness evaluation
-    flaky_tests = FLAKY_TEST_EXCEPTIONS.get(instance_id, set())
-    effective_pass_to_pass = [t for t in pass_to_pass if t not in flaky_tests]
-
     passed_tests = []
-    for test in effective_pass_to_pass:
+    for test in pass_to_pass:
         if "PASS" in pred_statuses.get(test, ""):
             passed_tests.append(test)
 
     passed_tests = set(passed_tests)
-    correctness_pct = len(passed_tests) / len(effective_pass_to_pass) if effective_pass_to_pass else 1.0
+    correctness_pct = len(passed_tests) / len(pass_to_pass) if pass_to_pass else 1.0
     adjusted_pred_speedup_ratio = 1.0 if correctness_pct != 1.0 else pred_speedup_ratio
 
     return {
