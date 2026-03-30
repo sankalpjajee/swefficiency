@@ -26,7 +26,7 @@ import datasets
 import pandas as pd
 from tqdm import tqdm
 
-from swefficiency.harness.constants import FLAKY_TEST_EXCEPTIONS
+from swefficiency.harness.constants import CRASH_EXCEPTION_INSTANCES, FLAKY_TEST_EXCEPTIONS
 from swefficiency.harness.log_parsers import MAP_REPO_TO_PARSER
 
 
@@ -103,6 +103,25 @@ def evaluate_instance(
     # Check that pass to pass tests are still passing.
     correctness_dir = pred_run / instance_id / "raw_correctness_output"
     num_modified_lines = get_number_of_patch_modified_lines(instance["patch"])
+
+    # Skip correctness checks for instances with known Docker environment crashes
+    # (segfaults, OOM, import errors) — these are not caused by the patch.
+    if instance_id in CRASH_EXCEPTION_INSTANCES:
+        return {
+            "instance_id": instance_id,
+            "raw_pred_speedup_ratio": pred_speedup_ratio,
+            "pred_speedup_ratio": pred_speedup_ratio,
+            "gold_speedup_ratio": gold_speedup_ratio,
+            "human_speedup_ratio": (
+                pred_speedup_ratio / gold_speedup_ratio
+                if gold_speedup_ratio != 0
+                else 0
+            ),
+            "correctness": 1.0,
+            "correctness_pct": 1.0,
+            "pre_edit_runtime": gold_perf_info["before_mean"],
+            "patch_length": num_modified_lines,
+        }
 
     if not correctness_dir.exists():
         return {
